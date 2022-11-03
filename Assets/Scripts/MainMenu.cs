@@ -30,7 +30,7 @@ public class MainMenu : MonoBehaviour{
     EventSystem m_EventSystem;
 
     // Start is called before the first frame update
-    void Start(){
+    public void Start(){
         if (OptionsMenu.OptionsActive) {
             VideoBackground.frame = OptionsMenu.frameVideo;
             AudioBackground.time = OptionsMenu.timeAudio;
@@ -45,7 +45,7 @@ public class MainMenu : MonoBehaviour{
     }
 
     // Update is called once per frame
-    void Update(){
+    public void Update(){
 
         m_PointerEventData = new PointerEventData(m_EventSystem);
         m_PointerEventData.position = Input.mousePosition;
@@ -105,7 +105,7 @@ public class MainMenu : MonoBehaviour{
     }
 
     public void GoToSelectionMenu(){
-        SceneManager.LoadScene("SelectionMenu");
+        SceneManager.LoadScene("Game");
     }
 
     public void OpenOptions(){

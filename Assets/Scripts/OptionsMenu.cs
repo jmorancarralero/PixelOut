@@ -23,7 +23,7 @@ public class OptionsMenu : MonoBehaviour{
     PointerEventData m_PointerEventData;
     EventSystem m_EventSystem;
     // Start is called before the first frame update
-    void Start(){
+    public void Start(){
         VideoBackground.frame = MainMenu.frameVideo;
         AudioBackground.time = MainMenu.timeAudio;
 
@@ -34,7 +34,7 @@ public class OptionsMenu : MonoBehaviour{
     }
 
     // Update is called once per frame
-    void Update(){
+    public void Update(){
 
         m_PointerEventData = new PointerEventData(m_EventSystem);
         m_PointerEventData.position = Input.mousePosition;

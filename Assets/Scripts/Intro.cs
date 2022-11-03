@@ -13,12 +13,12 @@ public class Intro : MonoBehaviour{
     public static long frameVideo;
     public static float timeAudio;    
     // Start is called before the first frame update
-    void Start(){
+    public void Start(){
         
     }
 
     // Update is called once per frame
-    void Update(){
+    public void Update(){
         elapsedTime += Time.deltaTime;
         if (Input.GetMouseButtonDown(0)) {
             frameVideo = VideoBackground.frame;
