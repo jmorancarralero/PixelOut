@@ -4,17 +4,17 @@ using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Base : MonoBehaviour{
+
     // Start is called before the first frame update
-    public void Start()
-    {
+    private void Start(){
         
     }
 
     // Update is called once per frame
-    public void Update()
-    {
+    private void Update(){
         
     }
 
@@ -106,5 +106,23 @@ public class Base : MonoBehaviour{
 
             return success;
         }
+    }
+
+    [Serializable]
+    public class PlayerInfo{
+
+        public int level = 1;
+
+    }
+
+    [Serializable]
+    public class OptionsInfo{
+
+        public bool fullScreen = false;
+
+        public float audioVolume = 0;
+
+        public int indexQuality = 0;
+
     }
 }

@@ -24,8 +24,8 @@ public class OptionsMenu : MonoBehaviour{
     EventSystem m_EventSystem;
     // Start is called before the first frame update
     public void Start(){
-        VideoBackground.frame = MainMenu.frameVideo;
-        AudioBackground.time = MainMenu.timeAudio;
+        VideoBackground.frame = MainMenu_old.frameVideo;
+        AudioBackground.time = MainMenu_old.timeAudio;
 
         m_Raycaster = GetComponent<GraphicRaycaster>();
         m_EventSystem = GetComponent<EventSystem>();
