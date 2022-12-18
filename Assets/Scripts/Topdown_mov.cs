@@ -13,20 +13,25 @@ public class Topdown_mov : MonoBehaviour {
     public static float movX;
     public static float movY;
 
+    public static bool stopMoving = false;
+
     private Animator animator;
+
+
 
     // Start is called before the first frame update
     private void Start() {
 
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        animator.SetFloat("last_y",1);
 
     }
 
     // Update is called once per frame
     private void Update() {
 
-        if(!GameController.isInPauseMode() && !GameController.isInCombatMode()){
+        if(stopMoving){
 
             movX = Input.GetAxisRaw("Horizontal");
             movY = Input.GetAxisRaw("Vertical");
@@ -49,7 +54,7 @@ public class Topdown_mov : MonoBehaviour {
 
     private	void FixedUpdate() {
 
-        if(!GameController.isInPauseMode() && !GameController.isInCombatMode()){
+        if(stopMoving){
 
             rb.MovePosition(rb.position + direction * speed * Time.fixedDeltaTime);
 

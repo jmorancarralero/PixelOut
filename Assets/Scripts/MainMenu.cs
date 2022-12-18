@@ -34,6 +34,10 @@ public class MainMenu : MonoBehaviour{
     [SerializeField] private GameObject OptionsMenu;
     [SerializeField] private GameObject SelectionMenu;
 
+    [SerializeField] private Base.PlayerInfo game1;
+    [SerializeField] private Base.PlayerInfo game2;
+    [SerializeField] private Base.PlayerInfo game3;
+
     [SerializeField] private Toggle fullScreenToggle;  
 
     [SerializeField] private Slider audioVolumeSlider; 
@@ -125,7 +129,7 @@ public class MainMenu : MonoBehaviour{
 
         if (Input.GetMouseButtonDown(0)) {
 
-            state += 1;
+            state = menuState;
 
             IntroMenu.SetActive(false);
             MainMenuPanel.SetActive(true);
@@ -361,10 +365,30 @@ public class MainMenu : MonoBehaviour{
 
             if(Selection1Active || Selection2Active || Selection3Active){
 
-                state = 0;
+                state = introState;
 
                 MainMenuPanel.SetActive(true);
                 SelectionMenu.SetActive(false);
+
+                if(Selection1Active){
+
+                    GameController.gameName = "game1";
+
+                    GameController.game = game1;
+
+                }else if(Selection2Active){
+
+                    GameController.gameName = "game2";
+
+                    GameController.game = game2;
+
+                }else{
+
+                    GameController.gameName = "game3";
+
+                    GameController.game = game3;
+
+                }
 
                 SceneManager.LoadScene("Game");
 
@@ -376,7 +400,9 @@ public class MainMenu : MonoBehaviour{
 
     public void GoToSelectionMenu(){
 
-        state = 2;
+        state = selectionState;
+
+        CheckGames();
 
         MainMenuPanel.SetActive(false);
         SelectionMenu.SetActive(true);
@@ -385,7 +411,7 @@ public class MainMenu : MonoBehaviour{
 
     public void OpenOptions(){
 
-        state = 3;
+        state = optionsState;
 
         MainMenuPanel.SetActive(false);
         OptionsMenu.SetActive(true);
@@ -420,7 +446,7 @@ public class MainMenu : MonoBehaviour{
 
     private void CheckGames(){
 
-        Base.PlayerInfo game1 = Base.DataSaver.loadData<Base.PlayerInfo>("game1");
+        game1 = Base.DataSaver.loadData<Base.PlayerInfo>("game1");
 
         if( game1 != null ){
 
@@ -428,7 +454,7 @@ public class MainMenu : MonoBehaviour{
 
         }
 
-        Base.PlayerInfo game2 = Base.DataSaver.loadData<Base.PlayerInfo>("game2");
+        game2 = Base.DataSaver.loadData<Base.PlayerInfo>("game2");
 
         if( game2 != null ){
 
@@ -436,7 +462,7 @@ public class MainMenu : MonoBehaviour{
 
         }
 
-        Base.PlayerInfo game3 = Base.DataSaver.loadData<Base.PlayerInfo>("game3");
+        game3 = Base.DataSaver.loadData<Base.PlayerInfo>("game3");
 
         if( game3 != null ){
 
@@ -477,7 +503,7 @@ public class MainMenu : MonoBehaviour{
 
     public void ReturnToMainMenu(){
 
-        state = 1;
+        state = menuState;
 
         MainMenuPanel.SetActive(true);
         OptionsMenu.SetActive(false);
