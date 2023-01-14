@@ -1,6 +1,8 @@
 # PixelOut
 TFG VideoJocs
 
+WebPage: https://jmorancarralero.itch.io/pixelout
+
 Pixel Out was born as a university project, as a futuristic turn-based 2d RPG game, where we play Lay, a 15-year-old boy who wants to acquire PixelOut, the recently released game, at all costs.
 
 Once he gets Pixel Out, he will be sucked into the game, full of threats, from which he must try to figure out how to get out.
