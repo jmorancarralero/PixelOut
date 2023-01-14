@@ -8,6 +8,8 @@ public class Credits : MonoBehaviour{
 
     [SerializeField] private TMP_Text text;
 
+    [SerializeField] private GameObject TransitionPanel;
+
     private float elapsedTime = 0f;
     private float fontSize = 0f;
 
@@ -20,6 +22,12 @@ public class Credits : MonoBehaviour{
     private const int stateArt = 2;
     private const int stateThanks = 3;
     private const int stateFinish = 4;
+
+    public static int state = 0;
+
+    private const int transitionState = 0;
+    private const int introState = 1;
+    private const int startTransitionState = 2;
 
     // Start is called before the first frame update
     private void Start(){
@@ -34,6 +42,32 @@ public class Credits : MonoBehaviour{
 
     // Update is called once per frame
     private void Update(){
+
+        switch(state){
+
+            case transitionState:
+
+                Transition();
+
+                break;
+
+            case introState:
+
+                Intro();
+
+                break;
+
+            case startTransitionState:
+
+                StartTransition();
+
+                break;
+
+        }
+
+    }
+
+    private void Intro(){
 
         elapsedTime += Time.deltaTime / 100;
 
@@ -67,21 +101,25 @@ public class Credits : MonoBehaviour{
                 case stateMusic:
 
                     text.text = "music by J.MORAN";
+
                     break;
                 
                 case stateArt:
 
                     text.text = "art by J.MORAN";
+
                     break;
 
                 case stateThanks:
 
                     text.text = "Thanks for play";
+
                     break;
 
                 case stateFinish:
 
-                    SceneManager.LoadScene("MainMenu");;
+                    state = startTransitionState;
+
                     break;              
                                 
             }
@@ -90,4 +128,46 @@ public class Credits : MonoBehaviour{
 
     }
 
+    private void StartTransition(){
+
+        elapsedTime += 0.005f;
+
+        TransitionPanel.GetComponent<CanvasGroup>().alpha = elapsedTime;
+
+        if (elapsedTime >= 1f) {
+
+            elapsedTime = elapsedTime % 1f;
+
+            TransitionPanel.GetComponent<CanvasGroup>().interactable = false;
+
+            MainMenu.state = 0;
+
+            SceneManager.LoadScene("MainMenu");
+
+        } 
+
+    }
+
+    private void Transition(){
+
+        elapsedTime += Time.deltaTime;
+
+        TransitionPanel.GetComponent<CanvasGroup>().alpha = 1-elapsedTime;
+
+        print(elapsedTime);
+
+        if (elapsedTime >= 1f) {
+
+            elapsedTime = elapsedTime % 1f;
+
+            TransitionPanel.GetComponent<CanvasGroup>().interactable = true;
+
+            TransitionPanel.SetActive(false);
+
+            state = introState;
+
+        } 
+
+    }
+    
 }

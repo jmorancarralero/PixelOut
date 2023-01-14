@@ -4,24 +4,39 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.Audio;
 using TMPro;
+using Cinemachine;
 
 public class GameController : MonoBehaviour{
 
     [SerializeField] private GameObject pauseMenu;
+    [SerializeField] private GameObject PausePanel;
+    [SerializeField] private GameObject OptionsPanel;
+    [SerializeField] private GameObject StatsPanel;
+    [SerializeField] private GameObject UpgradePanel;
+    [SerializeField] private GameObject SavedPanel;
+    [SerializeField] private GameObject TransitionPanel;
+    [SerializeField] private GameObject TransitionToGamePanel;
     [SerializeField] private GameObject combatMenu;
     [SerializeField] private GameObject player;
     [SerializeField] private GameObject playerSword;
+    [SerializeField] private GameObject playerSwordBody;
+    [SerializeField] private GameObject playerSwordWeapon;
+    [SerializeField] private GameObject playerSwordArm;
     [SerializeField] private GameObject playerGun;
+    [SerializeField] private GameObject playerGunBody;
+    [SerializeField] private GameObject playerGunWeapon;
+    [SerializeField] private GameObject playerGunArm;
+    [SerializeField] private GameObject playerGunBullet;
     [SerializeField] private GameObject playerHammer;
+    [SerializeField] private GameObject playerHammerBody;
+    [SerializeField] private GameObject playerHammerWeapon;
+    [SerializeField] private GameObject playerHammerArm;
     [SerializeField] private GameObject enemy1;
     [SerializeField] private GameObject enemy2;
     [SerializeField] private GameObject enemy3;
     [SerializeField] private GameObject boss;
-    [SerializeField] private GameObject playerBattle;
-    [SerializeField] private GameObject playerArmBattle;
-    [SerializeField] private GameObject playerWeaponBattle;
-    [SerializeField] private GameObject enemyBattle;
     [SerializeField] private GameObject playerHUD;
     [SerializeField] private GameObject playerOptions;
     [SerializeField] private GameObject scenePanel;
@@ -31,6 +46,8 @@ public class GameController : MonoBehaviour{
     [SerializeField] private GameObject known2Panel;
     [SerializeField] private GameObject known3Panel;
     [SerializeField] private GameObject unknownPanel;
+    [SerializeField] private GameObject unknown2Panel;
+    [SerializeField] private GameObject unknown3Panel;
     [SerializeField] private GameObject selectionPanel;
     [SerializeField] private GameObject homeGrid;
     [SerializeField] private GameObject cityGrid;
@@ -48,11 +65,37 @@ public class GameController : MonoBehaviour{
     [SerializeField] private GameObject sword;
     [SerializeField] private GameObject gun;
     [SerializeField] private GameObject hammer;
+    [SerializeField] private GameObject statsButton;
+
+    [SerializeField] private PolygonCollider2D borderHome;
+    [SerializeField] private PolygonCollider2D borderCity;
+    [SerializeField] private PolygonCollider2D borderLab;
+    [SerializeField] private PolygonCollider2D borderLabOutside;
+    [SerializeField] private PolygonCollider2D borderLabCenter;
+    [SerializeField] private PolygonCollider2D borderLabLeft;
+    [SerializeField] private PolygonCollider2D borderLabRight;
+    [SerializeField] private PolygonCollider2D borderLabTop;
+
+    [SerializeField] private  CinemachineConfiner confiner;
+
+    [SerializeField] private AudioSource AudioBackground;
 
     [SerializeField] public static Base.PlayerInfo game;
 
+    [SerializeField] private static Base.EnemyInfo enemy;
+
+    [SerializeField] private AudioMixer audioMixer;
+
+    [SerializeField] private Toggle fullScreenToggle;  
+
+    [SerializeField] private Slider audioVolumeSlider; 
+    [SerializeField] private Slider expSlider; 
+
+    [SerializeField] private TMP_Dropdown qualityDropdown; 
+
     [SerializeField] private TMP_Text Attack;
     [SerializeField] private TMP_Text Defend;
+    [SerializeField] private TMP_Text Run;
     [SerializeField] private TMP_Text BattleText;
     [SerializeField] private TMP_Text EnemyLife;
     [SerializeField] private TMP_Text PlayerLife;
@@ -60,51 +103,80 @@ public class GameController : MonoBehaviour{
     [SerializeField] private TMP_Text known2Text;
     [SerializeField] private TMP_Text known3Text;
     [SerializeField] private TMP_Text unknownText;
+    [SerializeField] private TMP_Text unknown2Text;
+    [SerializeField] private TMP_Text unknown3Text;
+    [SerializeField] private TMP_Text HPText;
+    [SerializeField] private TMP_Text AttackLabelText;
+    [SerializeField] private TMP_Text DefenseText;
+    [SerializeField] private TMP_Text SpeedText;
+    [SerializeField] private TMP_Text CritText;
+    [SerializeField] private TMP_Text FailText;
+    [SerializeField] private TMP_Text LVLText;
+    [SerializeField] private TMP_Text UPText;
+    [SerializeField] private TMP_Text ExpText;    
+    [SerializeField] private TMP_Text TipText; 
 
     public static int state = 0;
+    public static int battleState = 0;
 
-    private static int battleState = 0;
-    private static int enemyLife = 10;
     private static int sceneState = -1;
 
-    private const int initialSceneState = 0;
-    private const int normalState = 1;
-    private const int pauseState = 2;
-    private const int combatState = 3;
-    private const int sceneModeState = 4;
+    private const int exitTransitionState = 0;
+    private const int startTransitionState = 1;
+    private const int initialSceneState = 2;
+    private const int normalState = 3;
+    private const int pauseState = 4;
+    private const int combatState = 5;
+    private const int sceneModeState = 6;
     private const int startBattle = 0;
     private const int showInitialText = 1;
     private const int showText = 2;
     private const int playerTurn = 3;
     private const int playerAttack = 4;
     private const int enemyTurn = 5;
-    private const int winState = 6;
-    private const int defeatState = 7;
+    private const int runState = 6;
+    private const int winState = 7;
+    private const int expState = 8;
+    private const int defeatState = 9;
+    private const int finishGameState = 10;
+    private const int lvlState = 11;
 
     public static string gameName;
 
     private string lastObject; 
-    private string selectedWeapon; 
 
     private string[,] scene;
+    private string[] tipText;
 
     private const string AttackText = "Attack";
     private const string DefendText = "Defend";
+    private const string RunText = "Run";
     private const string ContainerText = "CombatMenu";
     private const string SwordText = "sword";
     private const string GunText = "gun";
     private const string HammerText = "hammer";
 
-    private float elapsedTime = 0f;
+    public static float elapsedTime = 0f;
 
     private bool glowActive = false;
     private bool AttackActive = false;
     private bool DefendActive = false;
+    private bool RunActive = false;
     private bool ShowE = false;
     private bool isInGame = false;
     private bool showSelection = false;
     private bool selectedOption = false;
     private bool finalCombatActive = false;
+    private bool isDefending = false;
+    private bool finishCombat = false;
+    private bool isSaving = false;
+    private bool startingTransition = false;
+    private bool finishingTransition = false;
+    private bool startingTransitionToGame = false;
+    private bool finishingTransitionToGame = false;
+    private bool showingCredits = false;
+    private bool showingGameOver = false;
+    private bool showingMainMenu = false;
 
 
     GraphicRaycaster m_Raycaster;
@@ -123,6 +195,8 @@ public class GameController : MonoBehaviour{
 
         }
 
+        tipText = Base.TipText();
+
         loadData();
 
     }
@@ -132,37 +206,135 @@ public class GameController : MonoBehaviour{
 
         switch(state){
 
+            case exitTransitionState:
+
+                ExitTransition();
+
+                break;
+
+            case startTransitionState:
+
+                StartTransition();
+
+                break;
+
             case initialSceneState:
 
                 InitialScene();
+
                 break;
 
             case normalState:
 
                 NormalGame();
+
                 break;
 
             case pauseState:
 
                 PauseGame();
+
                 break;
 
             case combatState:
 
                 CombatGame();
+
                 break;
 
             case sceneModeState:
 
                 SceneMode();
+
                 break;
 
         }
     }
 
+    private void ExitTransition(){
+
+        elapsedTime += 0.005f;
+
+        TransitionPanel.GetComponent<CanvasGroup>().alpha = 1-elapsedTime;
+
+        if (elapsedTime >= 1f) {
+
+            elapsedTime = elapsedTime % 1f;
+
+            TransitionPanel.GetComponent<CanvasGroup>().interactable = true;
+
+            TransitionPanel.SetActive(false);
+
+            state = initialSceneState;
+
+        } 
+
+    }
+
+    private void StartTransition(){
+
+        elapsedTime += 0.005f;
+
+        TransitionPanel.GetComponent<CanvasGroup>().alpha = elapsedTime;
+
+        if (elapsedTime >= 1f) {
+
+            elapsedTime = elapsedTime % 1f;
+
+            TransitionPanel.GetComponent<CanvasGroup>().interactable = false;
+
+            state = initialSceneState;
+
+        } 
+
+    }
+
+
     private void PauseGame(){
 
-        if(Input.GetKeyDown(KeyCode.Escape)) {
+        CheckOptions();
+
+        HPText.text = "HP "+game.actualLife+"/"+game.life;
+        AttackLabelText.text = "Attack "+game.attack;
+        DefenseText.text = "Defense "+game.defense;
+        SpeedText.text = "Speed "+game.speed;
+        CritText.text = "Crit. Chance "+game.critProb;        
+        FailText.text = "Fail PROB. "+game.failProb;
+        LVLText.text = "LVL "+game.level;
+        UPText.text = "upgrades "+game.upgrades;
+        ExpText.text = "EXP "+game.exp+"/"+game.level*1000;
+        expSlider.value = game.exp/game.level;
+        TipText.text = tipText[game.tip];
+
+        if(isSaving){
+
+            elapsedTime += 0.005f;
+
+            SavedPanel.SetActive(true);
+
+            if (elapsedTime >= 1f) {
+
+                elapsedTime = elapsedTime % 1f;
+
+                SavedPanel.SetActive(false);
+
+                isSaving = false;
+
+            } 
+
+        }
+
+        if(game.upgrades > 0){
+
+            UpgradePanel.SetActive(true);
+
+        }else{
+
+            UpgradePanel.SetActive(false);
+
+        }
+
+        if(Input.GetKeyDown(KeyCode.Escape) && PausePanel.activeSelf) {
 
             Time.timeScale = 1f;
 
@@ -173,10 +345,23 @@ public class GameController : MonoBehaviour{
 
         }
 
+        if(Input.GetKeyDown(KeyCode.Escape) && OptionsPanel.activeSelf) {
+
+            OptionsPanel.SetActive(false);
+            PausePanel.SetActive(true);
+
+        }
+
+        if(Input.GetKeyDown(KeyCode.Escape) && StatsPanel.activeSelf) {
+
+            StatsPanel.SetActive(false);
+            PausePanel.SetActive(true);
+
+        }
+
     }
 
     private void InitialScene(){
-
 
         if(game.initialSceneActive){
 
@@ -224,8 +409,6 @@ public class GameController : MonoBehaviour{
 
             Topdown_mov.stopMoving = false;
 
-
-
         }
 
         if(sceneState < scene.GetLength(1)){
@@ -236,8 +419,30 @@ public class GameController : MonoBehaviour{
 
                     knownPanel.SetActive(false);
                     unknownPanel.SetActive(true);
+                    unknown2Panel.SetActive(false);
+                    unknown3Panel.SetActive(false);
 
                     unknownText.text = scene[0,sceneState];
+                    break;
+
+                case "unknown2":
+
+                    knownPanel.SetActive(false);
+                    unknownPanel.SetActive(false);
+                    unknown2Panel.SetActive(true);
+                    unknown3Panel.SetActive(false);
+
+                    unknown2Text.text = scene[0,sceneState];
+                    break;
+
+                case "unknown3":
+
+                    knownPanel.SetActive(false);
+                    unknownPanel.SetActive(false);
+                    unknown2Panel.SetActive(false);
+                    unknown3Panel.SetActive(true);
+
+                    unknown3Text.text = scene[0,sceneState];
                     break;
 
                 case "known_female":
@@ -247,6 +452,8 @@ public class GameController : MonoBehaviour{
                     known2Panel.SetActive(false);
                     known3Panel.SetActive(false);
                     unknownPanel.SetActive(false);
+                    unknown2Panel.SetActive(false);
+                    unknown3Panel.SetActive(false);
 
                     known1Text.text = scene[0,sceneState];                     
                     break;
@@ -258,6 +465,8 @@ public class GameController : MonoBehaviour{
                     known2Panel.SetActive(true);
                     known3Panel.SetActive(false);
                     unknownPanel.SetActive(false);
+                    unknown2Panel.SetActive(false);
+                    unknown3Panel.SetActive(false);
 
                     known2Text.text = scene[0,sceneState];
                     break;
@@ -269,6 +478,8 @@ public class GameController : MonoBehaviour{
                     known2Panel.SetActive(false);
                     known3Panel.SetActive(true);
                     unknownPanel.SetActive(false);
+                    unknown2Panel.SetActive(false);
+                    unknown3Panel.SetActive(false);
 
                     known3Text.text = scene[0,sceneState];                     
                     break;
@@ -297,9 +508,58 @@ public class GameController : MonoBehaviour{
 
     }
 
+    private void BecomeTransition(){
+
+        if(startingTransition){
+
+            finishingTransition = true;
+
+        }
+
+        if(!startingTransition){
+
+            TransitionPanel.SetActive(true);
+
+            state = startTransitionState;
+
+            startingTransition = true;
+            Topdown_mov.stopMoving = false;
+
+        }
+
+    }
+
+    private void EndTransition(){
+
+        startingTransition = false;
+        finishingTransition = false;
+        Topdown_mov.stopMoving = true;
+
+        state = exitTransitionState;
+
+    }
+
     private void NormalGame(){
 
         showSelectionMode();
+
+        if(showingCredits){
+
+            ShowCredits();
+
+        }
+
+        if(showingGameOver){
+
+            ShowGameOver();
+
+        }
+
+        if(showingMainMenu){
+
+            GoToMenu();
+
+        }
 
         if(homeGrid.activeSelf){
             
@@ -317,12 +577,12 @@ public class GameController : MonoBehaviour{
         }
 
 
-        print(player.transform.position.x+":"+player.transform.position.y);
+        //print(player.transform.position.x+":"+player.transform.position.y);
 
-        if(homeGrid.activeSelf && isInGame){
-            
-            homeGrid.SetActive(false);
-            labMainGrid.SetActive(true);
+        if(finishingTransitionToGame){
+
+            startingTransitionToGame = false;
+            finishingTransitionToGame = false;
 
             scene = Base.labText();
 
@@ -330,92 +590,280 @@ public class GameController : MonoBehaviour{
 
         }
 
+        if(TransitionToGamePanel.activeSelf){
+
+            if(startingTransitionToGame){
+
+                BecomeTransition();
+
+                if(finishingTransition){
+
+                    labMainGrid.SetActive(true);
+                    statsButton.SetActive(true);
+                    TransitionToGamePanel.SetActive(false);
+
+                    confiner.m_BoundingShape2D = borderLab; 
+
+                    EndTransition();
+
+                    finishingTransitionToGame = true;
+
+                }
+
+            }
+
+            if(!startingTransitionToGame){
+
+                elapsedTime += 0.005f;
+
+                if (elapsedTime >= 1f) {
+
+                    elapsedTime = elapsedTime % 1f;
+
+                    startingTransitionToGame = true;
+
+                } 
+
+            }
+
+        }
+
+        if(homeGrid.activeSelf && isInGame){
+            
+            BecomeTransition();
+
+            if(finishingTransition){
+
+                homeGrid.SetActive(false);
+                TransitionToGamePanel.SetActive(true);
+
+                AudioBackground.clip = Resources.Load("Audios/lab") as AudioClip;
+                AudioBackground.Play();   
+
+                game.tip = 4; 
+
+                EndTransition();
+
+            }
+  
+        }
 
         if(homeGrid.activeSelf && player.transform.position.x > -0.6 && player.transform.position.x < -0.3 &&  player.transform.position.y < -5.2 && player.transform.position.y > -5.5){
             
-            homeGrid.SetActive(false);
-            cityGrid.SetActive(true);
+            BecomeTransition();
 
+            if(finishingTransition){
+
+                homeGrid.SetActive(false);
+                cityGrid.SetActive(true);
+
+                confiner.m_BoundingShape2D = borderCity;     
+
+                AudioBackground.clip = Resources.Load("Audios/city") as AudioClip;
+                AudioBackground.Play();
+
+                EndTransition();
+
+            }
+            
         }
 
         if(cityGrid.activeSelf && player.transform.position.x > -0.58 && player.transform.position.x < -0.42 &&  player.transform.position.y < -4.7 && player.transform.position.y > -4.8){
             
-            homeGrid.SetActive(true);
-            cityGrid.SetActive(false);
+            BecomeTransition();
 
+            if(finishingTransition){            
+            
+                homeGrid.SetActive(true);
+                cityGrid.SetActive(false);
+
+                confiner.m_BoundingShape2D = borderHome;     
+
+                AudioBackground.clip = Resources.Load("Audios/home") as AudioClip;
+                AudioBackground.Play();   
+
+                EndTransition();
+
+            }
         }
 
         if(labMainGrid.activeSelf && player.transform.position.x > 7.4 && player.transform.position.x < 8.65 &&  player.transform.position.y < 1 && player.transform.position.y > 0.5){
 
-            labOutsideGrid.SetActive(true);
-            labMainGrid.SetActive(false);
+            BecomeTransition();
 
-            game.combatActive = true;
+            if(finishingTransition){            
+            
+                labOutsideGrid.SetActive(true);
+                labMainGrid.SetActive(false);
+
+                confiner.m_BoundingShape2D = borderLabOutside;        
+
+                game.combatActive = true;
+
+                EndTransition();
+
+            }
 
         }
 
         if(labOutsideGrid.activeSelf && player.transform.position.x > 7.4 && player.transform.position.x < 8.65 &&  player.transform.position.y < 3.2 && player.transform.position.y > 2.8){
 
-            labOutsideGrid.SetActive(false);
-            labMainGrid.SetActive(true);
+            BecomeTransition();
 
-            game.combatActive = false;
+            if(finishingTransition){            
+            
+                labOutsideGrid.SetActive(false);
+                labMainGrid.SetActive(true);
+
+                confiner.m_BoundingShape2D = borderLab;        
+
+                game.combatActive = false;
+
+                EndTransition();
+
+            }
 
         }
 
         if(labOutsideGrid.activeSelf && player.transform.position.x > 6.4 && player.transform.position.x < 9.7 &&  player.transform.position.y < 16.2 && player.transform.position.y > 15.8){
 
-            labOutsideGrid.SetActive(false);
-            labCenterGrid.SetActive(true);
+            BecomeTransition();
+
+            if(finishingTransition){            
+            
+                labOutsideGrid.SetActive(false);
+                labCenterGrid.SetActive(true);
+
+                confiner.m_BoundingShape2D = borderLabCenter;
+
+                EndTransition();
+
+            }
+
+            if(game.labCenterDoorActive){
+
+                game.tip = 5;
+
+            }        
 
         }
 
         if(labCenterGrid.activeSelf && player.transform.position.x > 6.4 && player.transform.position.x < 9.7 &&  player.transform.position.y < 15.6 && player.transform.position.y > 15.4){
 
-            labOutsideGrid.SetActive(true);
-            labCenterGrid.SetActive(false);
+            BecomeTransition();
 
+            if(finishingTransition){            
+            
+                labOutsideGrid.SetActive(true);
+                labCenterGrid.SetActive(false);
+
+                confiner.m_BoundingShape2D = borderLabOutside;   
+
+                EndTransition();
+
+            }
+     
         }
 
         if(labCenterGrid.activeSelf && player.transform.position.x > -2.6 && player.transform.position.x < -2.5 &&  player.transform.position.y < 27.5 && player.transform.position.y > 25){
 
-            labLeftGrid.SetActive(true);
-            labCenterGrid.SetActive(false);
+            BecomeTransition();
+
+            if(finishingTransition){            
+            
+                labLeftGrid.SetActive(true);
+                labCenterGrid.SetActive(false);
+
+                confiner.m_BoundingShape2D = borderLabLeft;  
+
+                EndTransition();
+
+            }
 
         }
 
         if(labLeftGrid.activeSelf && player.transform.position.x > -2.5 && player.transform.position.x < -2.4 &&  player.transform.position.y < 27.5 && player.transform.position.y > 25){
 
-            labLeftGrid.SetActive(false);
-            labCenterGrid.SetActive(true);
+            BecomeTransition();
+
+            if(finishingTransition){            
+            
+                labLeftGrid.SetActive(false);
+                labCenterGrid.SetActive(true);
+
+                confiner.m_BoundingShape2D = borderLabCenter;     
+
+                EndTransition();
+
+            }
 
         }
 
         if(labCenterGrid.activeSelf && player.transform.position.x > 18.5 && player.transform.position.x < 18.6 &&  player.transform.position.y < 27.5 && player.transform.position.y > 25){
 
-            labRightGrid.SetActive(true);
-            labCenterGrid.SetActive(false);
+            BecomeTransition();
+
+            if(finishingTransition){            
+                
+                labRightGrid.SetActive(true);
+                labCenterGrid.SetActive(false);
+
+                confiner.m_BoundingShape2D = borderLabRight;    
+
+                EndTransition();
+
+            }
 
         }
 
         if(labRightGrid.activeSelf && player.transform.position.x > 18.3 && player.transform.position.x < 18.5 &&  player.transform.position.y < 27.5 && player.transform.position.y > 25){
 
-            labRightGrid.SetActive(false);
-            labCenterGrid.SetActive(true);
+            BecomeTransition();
+
+            if(finishingTransition){                        
+
+                labRightGrid.SetActive(false);
+                labCenterGrid.SetActive(true);
+
+                confiner.m_BoundingShape2D = borderLabCenter;        
+
+                EndTransition();
+
+            }
 
         }
 
         if(labCenterGrid.activeSelf && player.transform.position.x > 6.4 && player.transform.position.x < 9.7 &&  player.transform.position.y < 37 && player.transform.position.y > 36.5){
 
-            labTopGrid.SetActive(true);
-            labCenterGrid.SetActive(false);
+            BecomeTransition();
+
+            if(finishingTransition){                        
+
+                labTopGrid.SetActive(true);
+                labCenterGrid.SetActive(false);
+
+                confiner.m_BoundingShape2D = borderLabTop;            
+
+                EndTransition();
+
+            }
 
         }
 
         if(labTopGrid.activeSelf && player.transform.position.x > 6.4 && player.transform.position.x < 9.7 &&  player.transform.position.y < 36 && player.transform.position.y > 35.5){
 
-            labTopGrid.SetActive(false);
-            labCenterGrid.SetActive(true);
+            BecomeTransition();
+
+            if(finishingTransition){                        
+
+                labTopGrid.SetActive(false);
+                labCenterGrid.SetActive(true);
+
+                confiner.m_BoundingShape2D = borderLabCenter;         
+
+                EndTransition();
+
+            }
 
         }
 
@@ -464,6 +912,8 @@ public class GameController : MonoBehaviour{
 
                 scene = Base.momText();
 
+                game.tip = 1;
+
                 game.momTextActivated = true;
 
             }
@@ -490,6 +940,8 @@ public class GameController : MonoBehaviour{
             }else if(game.momTextActivated){
 
                 scene = Base.shopText2();
+
+                game.tip = 2;
 
                 game.shopTextActivated = true;
                 game.unknownTextActivated = true;
@@ -522,6 +974,8 @@ public class GameController : MonoBehaviour{
 
                 scene = Base.unknownText2();
 
+                game.tip = 3;
+
                 game.consoleTextActivated = true;
                 game.unknownText2Activated = true;
 
@@ -545,6 +999,14 @@ public class GameController : MonoBehaviour{
                 playerSword.SetActive(true);
 
                 game.selectedWeapon = "sword";
+
+                game.attack = 10;
+                game.defense = 5;
+                game.speed = 5;
+                game.critProb = 50;
+                game.failProb = 15;
+                game.life = 15;
+                game.actualLife = 15;
 
                 selectedOption = false;
 
@@ -597,6 +1059,14 @@ public class GameController : MonoBehaviour{
 
                 game.selectedWeapon = "gun";
 
+                game.attack = 5;
+                game.defense = 10;
+                game.speed = 10;
+                game.critProb = 50;
+                game.failProb = 10;
+                game.life = 10;
+                game.actualLife = 10;
+
                 selectedOption = false;
 
                 state = sceneModeState;
@@ -637,7 +1107,6 @@ public class GameController : MonoBehaviour{
 
             }
 
-
         }
 
         if(labMainGrid.activeSelf && player.transform.position.x > 3 && player.transform.position.x < 3.8 &&  player.transform.position.y < 8.3 && player.transform.position.y > 7.9){
@@ -649,6 +1118,14 @@ public class GameController : MonoBehaviour{
                 playerHammer.SetActive(true);
 
                 game.selectedWeapon = "hammer";
+
+                game.attack = 20;
+                game.defense = 5;
+                game.speed = 2;
+                game.critProb = 50;
+                game.failProb = 20;
+                game.life = 20;
+                game.actualLife = 20;
 
                 selectedOption = false;
 
@@ -750,6 +1227,8 @@ public class GameController : MonoBehaviour{
 
             state = sceneModeState; 
 
+            game.tip = 6;
+
             ShowE = false;
 
         }
@@ -773,7 +1252,7 @@ public class GameController : MonoBehaviour{
         }
 
 
-        if(!game.leftButtonActivated && player.transform.position.x > -10.3 && player.transform.position.x < -10.2 &&  player.transform.position.y < 31.3 && player.transform.position.y > 29.5){
+        if(!game.leftButtonActivated && player.transform.position.x > -22.4 && player.transform.position.x < -22.1 &&  player.transform.position.y < 31.3 && player.transform.position.y > 29.5){
             
             game.leftButtonActivated = !game.leftButtonActivated;
 
@@ -785,7 +1264,7 @@ public class GameController : MonoBehaviour{
 
         }
 
-        if(!game.righttButtonActivated && player.transform.position.x > 26 && player.transform.position.x < 26.2 &&  player.transform.position.y < 31.3 && player.transform.position.y > 29.5){
+        if(!game.righttButtonActivated && player.transform.position.x > 38.1 && player.transform.position.x < 38.4 &&  player.transform.position.y < 31.3 && player.transform.position.y > 29.5){
             
             game.righttButtonActivated = !game.righttButtonActivated;
 
@@ -822,7 +1301,7 @@ public class GameController : MonoBehaviour{
 
         float number = Random.value;
 
-        if(((Topdown_mov.movX != 0 || Topdown_mov.movY != 0) && number < 0.8 && number >= 0.799 && game.combatActive) || finalCombatActive){
+        if(((Topdown_mov.movX != 0 || Topdown_mov.movY != 0) && number < 0.8 && number >= 0.79995 && game.combatActive) || finalCombatActive){
 
             combatMenu.SetActive(true);
             player.SetActive(false);
@@ -835,29 +1314,28 @@ public class GameController : MonoBehaviour{
                 enemy3.SetActive(false);
                 boss.SetActive(true);
 
-                enemyLife = 50;
+                enemy = Base.ObjectBoss();
 
             }else{
 
                 float aux = Random.value;
-                print(aux);
-                if(aux > 0 && aux <= 0.3){
+                if(aux > 0 && aux <= 0.5){
 
                     enemy1.SetActive(true);
                     enemy2.SetActive(false);
                     enemy3.SetActive(false);
                     boss.SetActive(false); 
 
-                    enemyLife = 10;                   
+                    enemy = Base.ObjectEnemy1();               
 
-                }else if(aux > 0.3 && aux <= 0.6){
+                }else if(aux > 0.5 && aux <= 0.8){
 
                     enemy1.SetActive(false);
                     enemy2.SetActive(true);
                     enemy3.SetActive(false);
-                    boss.SetActive(false);     
+                    boss.SetActive(false);
 
-                    enemyLife = 15;                                      
+                    enemy = Base.ObjectEnemy2();                               
 
                 }else{
 
@@ -866,7 +1344,7 @@ public class GameController : MonoBehaviour{
                     enemy3.SetActive(true);
                     boss.SetActive(false);    
 
-                    enemyLife = 5;                  
+                    enemy = Base.ObjectEnemy3();             
 
                 }
 
@@ -875,11 +1353,50 @@ public class GameController : MonoBehaviour{
             state = combatState;
             
             elapsedTime = elapsedTime % 1f;
+
+            AudioBackground.clip = Resources.Load("Audios/combat") as AudioClip;
+            AudioBackground.Play();
       
-            // playerBattle.GetComponent<Animator>().enabled = false;
-            // playerArmBattle.GetComponent<Animator>().enabled = false;
-            // playerWeaponBattle.GetComponent<Animator>().enabled = false;
-            // enemyBattle.GetComponent<Animator>().enabled = false;
+            switch(game.selectedWeapon){
+
+                case "hammer":
+
+                    playerHammerArm.GetComponent<Animator>().enabled = false;
+                    playerHammerArm.GetComponent<Animator>().Rebind();
+                    playerHammerArm.GetComponent<Animator>().Update(0f);
+                    playerHammerBody.GetComponent<Animator>().enabled = false;
+                    playerHammerBody.GetComponent<Animator>().Rebind();
+                    playerHammerBody.GetComponent<Animator>().Update(0f);
+                    playerHammerWeapon.GetComponent<Animator>().enabled = false;
+                    playerHammerWeapon.GetComponent<Animator>().Rebind();
+                    playerHammerWeapon.GetComponent<Animator>().Update(0f);
+
+
+                    break;
+                
+                case "sword":
+
+                    playerSwordArm.GetComponent<Animator>().enabled = false;
+                    playerSwordArm.GetComponent<Animator>().Rebind();
+                    playerSwordArm.GetComponent<Animator>().Update(0f);
+                    playerSwordBody.GetComponent<Animator>().enabled = false;
+                    playerSwordBody.GetComponent<Animator>().Rebind();
+                    playerSwordBody.GetComponent<Animator>().Update(0f);                    
+                    playerSwordWeapon.GetComponent<Animator>().enabled = false; 
+                    playerSwordWeapon.GetComponent<Animator>().Rebind();
+                    playerSwordWeapon.GetComponent<Animator>().Update(0f);                       
+
+                    break;
+
+                case "gun":
+
+                    playerGunBullet.SetActive(false);
+                    playerGunBullet.GetComponent<Animator>().Rebind();
+                    playerGunBullet.GetComponent<Animator>().Update(0f);    
+
+                    break;
+
+            }
 
         }
 
@@ -887,25 +1404,44 @@ public class GameController : MonoBehaviour{
 
     private void CombatGame(){
         
-        EnemyLife.text = "HP: " + enemyLife;
+        if(enemy.actualLife >= 0){
 
-        PlayerLife.text = "HP: " + game.actualLife;
+            EnemyLife.text = "HP: " + enemy.actualLife;
+
+        }else{
+
+            EnemyLife.text = "HP: " + 0;
+
+        }
+
+        if(game.actualLife >= 0){
+
+            PlayerLife.text = "HP: " + game.actualLife;
+
+        }else{
+
+            PlayerLife.text = "HP: " + 0;
+
+        }
 
 
         if(game.actualLife <= 0){
 
             battleState = defeatState;
 
-        }    
-        if(enemyLife <= 0){
+        }  
 
-            battleState = startBattle;
+        if(enemy.actualLife <= 0 && battleState == enemyTurn ){
 
-            combatMenu.SetActive(false);
-            player.SetActive(true);
-            playerHUD.SetActive(false);
+            game.exp += enemy.exp;
 
-            state = normalState;
+            battleState = winState;
+
+            if(finalCombatActive){
+
+                battleState = finishGameState;                
+
+            }
 
         }    
 
@@ -914,37 +1450,68 @@ public class GameController : MonoBehaviour{
             case startBattle:
 
                 StartBattle();
+
                 break;
 
             case showInitialText:
             
                 ShowInitialText();
+
                 break;
 
             case showText:
             
                 ShowText();
+
                 break;
 
             case playerTurn:
 
                 WaitingAttack();
+
                 break;
 
             case enemyTurn:
 
                 EnemyAttack();
+
                 break;
 
-            case winState:
+            case finishGameState:
 
                 ShowCredits();
+
                 break;
 
             case defeatState:
 
                 ShowGameOver();
+
                 break;
+
+            case winState:
+
+                ShowResults();
+
+                break;
+
+            case expState:
+
+                ShowExp();
+
+                break;
+
+            case lvlState:
+
+                ShowLvl();
+
+                break;   
+
+            case runState:
+
+                RunTurn();
+
+                break;           
 
         }
 
@@ -968,11 +1535,164 @@ public class GameController : MonoBehaviour{
 
     }
 
+    private void ShowLvl(){
+
+        elapsedTime += Time.deltaTime / 2;
+
+        BattleText.text = "You leveled up";
+
+        if (elapsedTime >= 1f) {
+
+            game.upgrades += 1;
+            game.exp -= 1000*game.level;
+            game.level += 1;
+            elapsedTime = elapsedTime % 1f;
+
+            returnGame();
+
+        } 
+
+    }    
+
+    private void ShowResults(){
+
+        elapsedTime += Time.deltaTime / 2;
+
+        BattleText.text = "The virus "+ enemy.name + " was defeated";
+
+        switch(enemy.name){
+
+            case "Herbaceum":
+
+                enemy1.SetActive(false);
+
+                break;
+
+            case "Poisonus":
+
+                enemy2.SetActive(false);
+
+                break;
+
+            case "Fangus":
+
+                enemy3.SetActive(false);
+
+                break;
+
+            case "Final Boss":
+
+                boss.SetActive(false);
+
+                break;
+
+        }   
+
+        if (elapsedTime >= 1f) {
+       
+            battleState = expState;
+
+            switch(game.selectedWeapon){
+
+                case "hammer":
+
+                    playerHammerArm.GetComponent<Animator>().enabled = false;
+                    playerHammerArm.GetComponent<Animator>().Rebind();
+                    playerHammerArm.GetComponent<Animator>().Update(0f);
+                    playerHammerBody.GetComponent<Animator>().enabled = false;
+                    playerHammerBody.GetComponent<Animator>().Rebind();
+                    playerHammerBody.GetComponent<Animator>().Update(0f);
+                    playerHammerWeapon.GetComponent<Animator>().enabled = false;
+                    playerHammerWeapon.GetComponent<Animator>().Rebind();
+                    playerHammerWeapon.GetComponent<Animator>().Update(0f);
+
+                    break;
+                
+                case "sword":
+
+                    playerSwordArm.GetComponent<Animator>().enabled = false;
+                    playerSwordArm.GetComponent<Animator>().Rebind();
+                    playerSwordArm.GetComponent<Animator>().Update(0f);
+                    playerSwordBody.GetComponent<Animator>().enabled = false;
+                    playerSwordBody.GetComponent<Animator>().Rebind();
+                    playerSwordBody.GetComponent<Animator>().Update(0f);                    
+                    playerSwordWeapon.GetComponent<Animator>().enabled = false; 
+                    playerSwordWeapon.GetComponent<Animator>().Rebind();
+                    playerSwordWeapon.GetComponent<Animator>().Update(0f);                       
+
+                    break;
+
+                case "gun":
+
+                    playerGunBullet.SetActive(false);
+                    playerGunBullet.GetComponent<Animator>().Rebind();
+                    playerGunBullet.GetComponent<Animator>().Update(0f);    
+
+                    break;
+
+            }
+
+            elapsedTime = elapsedTime % 1f;
+
+        } 
+
+    }
+
+    private void returnGame(){
+
+        battleState = startBattle;
+
+        combatMenu.SetActive(false);
+        player.SetActive(true);
+        playerHUD.SetActive(false);
+
+        state = normalState;
+
+        BattleText.text = "";
+
+        AudioBackground.clip = Resources.Load("Audios/lab") as AudioClip;
+        AudioBackground.Play();
+
+    }
+
+    private void ShowExp(){
+
+        elapsedTime += Time.deltaTime / 2;
+
+        BattleText.text = "You won "+ enemy.exp + " EXP points";
+
+        if (elapsedTime >= 1f) {
+
+            elapsedTime = elapsedTime % 1f;
+
+            if(game.exp >= 1000*game.level){
+
+                battleState = lvlState;
+
+            }else{
+
+                returnGame(); 
+
+            }
+
+        }       
+
+    }
+
     private void ShowInitialText(){
 
-        BattleText.text = "the virus "+ enemyBattle.name + " gets in your way";
+        BattleText.text = "the virus "+ enemy.name + " gets in your way";
 
-        battleState = showText;
+
+        if(game.speed > enemy.speed){
+
+            battleState = showText;
+
+        }else{
+
+            battleState = enemyTurn;
+
+        }
 
     }
 
@@ -982,11 +1702,11 @@ public class GameController : MonoBehaviour{
 
         if (elapsedTime >= 1f) {
 
+            elapsedTime = elapsedTime % 1f;
+
             playerOptions.SetActive(true);
 
             BattleText.text = "What do you want to do?";
-
-            elapsedTime = elapsedTime % 1f;
 
             battleState = playerTurn;
 
@@ -1009,12 +1729,24 @@ public class GameController : MonoBehaviour{
 
                     AttackActive = true;
                     DefendActive = false;
+                    RunActive = false;
+
                     break;
 
                 case DefendText:
 
                     AttackActive = false;
                     DefendActive = true;
+                    RunActive = false;
+
+                    break;
+
+                case RunText:
+
+                    AttackActive = false;
+                    DefendActive = false;
+                    RunActive = true;
+
                     break;
 
                 default:
@@ -1023,6 +1755,7 @@ public class GameController : MonoBehaviour{
 
                         AttackActive = false;
                         DefendActive = false;
+                        RunActive = false;
 
                     }
 
@@ -1044,10 +1777,15 @@ public class GameController : MonoBehaviour{
 
             Defend.color = new Color(1,1,1, glowActive?elapsedTime:1-elapsedTime);
 
+        }else if (RunActive) {
+
+            Run.color = new Color(1,1,1, glowActive?elapsedTime:1-elapsedTime);
+
         }else{
 
             Attack.color = new Color(1,1,1,1);
             Defend.color = new Color(1,1,1,1);
+            Run.color = new Color(1,1,1,1);
 
         }
 
@@ -1076,6 +1814,22 @@ public class GameController : MonoBehaviour{
 
     }
 
+    private void CheckOptions(){
+
+        fullScreenToggle.isOn = Screen.fullScreen;
+        float volume = 0f;
+        audioMixer.GetFloat("Volume",out volume);
+
+        if(volume == 0f){
+
+            volume = -1f;
+
+        }
+        audioVolumeSlider.value = volume;
+        qualityDropdown.value = QualitySettings.GetQualityLevel();
+
+    }
+
     private void loadData(){
 
         player.transform.position = new Vector2(game.posX, game.posY);
@@ -1090,6 +1844,75 @@ public class GameController : MonoBehaviour{
         labTopGrid.SetActive(game.labTopActive);
         labMainDoorGrid.SetActive(game.labMainDoorActive);    
         labCenterDoorGrid.SetActive(game.labCenterDoorActive);
+
+        switch (true){
+
+            case true when game.labMainActive: case true when game.labOutsideActive: case true when game.labCenterActive: case true when game.labLeftActive: case true when game.labRightActive: case true when game.labTopActive:
+
+                AudioBackground.clip = Resources.Load("Audios/lab") as AudioClip;
+                AudioBackground.Play();
+
+                statsButton.SetActive(true);
+
+                break;
+
+        }
+
+        switch(true){
+
+            case true when game.homeActive:
+
+                statsButton.SetActive(false);
+
+                break;
+
+            case true when game.cityActive:
+
+                AudioBackground.clip = Resources.Load("Audios/city") as AudioClip;
+                AudioBackground.Play();
+
+                confiner.m_BoundingShape2D = borderCity;  
+
+                break;
+
+            case true when game.labMainActive:
+
+                confiner.m_BoundingShape2D = borderLab;  
+ 
+                break;
+
+            case true when game.labOutsideActive:
+
+                confiner.m_BoundingShape2D = borderLabOutside;  
+ 
+                break;             
+            
+            case true when game.labCenterActive:
+
+                confiner.m_BoundingShape2D = borderLabCenter;  
+ 
+                break;             
+            
+            case true when game.labLeftActive:
+
+                confiner.m_BoundingShape2D = borderLabLeft;  
+ 
+                break;             
+            
+            case true when game.labRightActive:
+
+                confiner.m_BoundingShape2D = borderLabRight;  
+ 
+                break; 
+            
+            case true when game.labTopActive:
+
+                confiner.m_BoundingShape2D = borderLabTop;  
+ 
+                break;
+
+        }
+
 
         if(!string.IsNullOrEmpty(game.selectedWeapon)){
 
@@ -1117,7 +1940,111 @@ public class GameController : MonoBehaviour{
 
     public void GoToMenu(){
 
-        SceneManager.LoadScene("MainMenu");
+        if(!showingMainMenu){
+
+            showingMainMenu = true;
+
+            BecomeTransition();
+
+        }else{
+
+            showingMainMenu = false;
+
+            game = new Base.PlayerInfo();
+
+            MainMenu.state = 0;
+            
+            Time.timeScale = 1f;
+
+            SceneManager.LoadScene("MainMenu");
+
+        }
+
+    }
+
+    public void OpenOptions(){
+
+        PausePanel.SetActive(false);
+        OptionsPanel.SetActive(true);
+
+    }
+
+    public void OpenStats(){
+
+        PausePanel.SetActive(false);
+        StatsPanel.SetActive(true);
+
+    }
+
+    public void UpgradeHP(){
+
+        game.life += 10;
+        game.upgrades -= 1;
+
+    }
+
+    public void UpgradeAttack(){
+
+        game.attack += 10;
+        game.upgrades -= 1;
+
+    }
+
+    public void UpgradeDefense(){
+
+        game.defense += 10;
+        game.upgrades -= 1;
+
+    }
+
+    public void UpgradeSpeed(){
+
+        game.speed += 5;
+        game.upgrades -= 1;
+
+    } 
+
+    public void UpgradeCrit(){
+
+        game.critProb += 5;
+        game.upgrades -= 1;
+
+    } 
+
+    public void UpgradeFail(){
+
+        if(game.failProb > 0){
+            
+            game.failProb -= 5;
+            game.upgrades -= 1;
+
+        }
+
+    }        
+
+    public void FullScreen(bool fullScreen){
+
+        Base.FullScreen(fullScreen);
+
+    }
+
+    public void ChangeVolume(float volume){
+
+        Base.ChangeVolume(volume, audioMixer);
+
+    }
+
+    public void ChangeQuality(int index){
+
+        Base.ChangeQuality(index);
+
+    }
+
+    public void SaveOptions(){
+
+        Base.SaveOptions(fullScreenToggle.isOn, audioVolumeSlider.value, qualityDropdown.value);
+
+        isSaving = true;
 
     }
 
@@ -1139,17 +2066,69 @@ public class GameController : MonoBehaviour{
 
         Base.DataSaver.saveData(game, gameName);
 
+        isSaving = true;
+
     }
 
     public void AttackSelected(){
 
-        BattleText.text = "you attack with all your energy";
+        float number = Random.value; 
 
-        enemyLife -= 5;
+        if(number > game.failProb/100){
+
+            number = Random.value;
+
+            int finalAttack = game.critProb > number ? game.attack * 2 : game.attack;
+
+            int finalDefense = isDefending ? enemy.defense * 2 : enemy.defense;
+
+            int finalDamage = finalAttack - finalDefense;
+
+            if(finalDamage > 0){
+
+                enemy.actualLife -= finalDamage;
+
+            }
+
+            BattleText.text = "you attack with all your energy";
+
+            switch(game.selectedWeapon){
+
+                case "hammer":
+
+                    playerHammerArm.GetComponent<Animator>().enabled = true;
+                    playerHammerBody.GetComponent<Animator>().enabled = true;
+                    playerHammerWeapon.GetComponent<Animator>().enabled = true;
+
+                    break;
+                
+                case "sword":
+
+                    playerSwordArm.GetComponent<Animator>().enabled = true;
+                    playerSwordBody.GetComponent<Animator>().enabled = true;
+                    playerSwordWeapon.GetComponent<Animator>().enabled = true;    
+
+                    break;
+
+                case "gun":
+
+                    playerGunBullet.SetActive(true);
+
+                    break;
+
+            }
+
+
+        }else{
+
+            BattleText.text = "you have missed your attack";
+
+        }   
 
         battleState = enemyTurn; 
 
         playerOptions.SetActive(false);
+
 
     }
 
@@ -1157,11 +2136,63 @@ public class GameController : MonoBehaviour{
 
         BattleText.text = "you have blocked the attack";
 
-        game.actualLife += 1;
+        isDefending = true;
 
         battleState = enemyTurn; 
 
         playerOptions.SetActive(false);
+
+    }
+
+    private void RunTurn(){
+
+        elapsedTime += Time.deltaTime / 2;  
+
+        if (elapsedTime >= 1f) {
+
+            elapsedTime = elapsedTime % 1f;
+
+            if(finishCombat){
+
+                finishCombat = false;
+
+                returnGame();
+
+            }else{
+
+                battleState = enemyTurn; 
+
+            }
+
+        } 
+
+    }
+
+    public void RunSelected(){
+
+        battleState = runState;
+
+        finishCombat = game.speed > enemy.speed;
+
+        playerOptions.SetActive(false);
+
+        if(!finishCombat){
+
+            float number = Random.value;
+
+            finishCombat = number > 0.5;
+
+        }
+
+        if(finishCombat){
+
+            BattleText.text = "fortunately you fled";
+
+        }else{
+
+            BattleText.text = "you have failed to try to escape";
+
+        }
 
     }
 
@@ -1171,11 +2202,105 @@ public class GameController : MonoBehaviour{
 
         if (elapsedTime >= 1f) {
 
-            BattleText.text = "the enemy attacks you mercilessly";
+            switch(game.selectedWeapon){
+
+                case "hammer":
+
+                    playerHammerArm.GetComponent<Animator>().enabled = false;
+                    playerHammerArm.GetComponent<Animator>().Rebind();
+                    playerHammerArm.GetComponent<Animator>().Update(0f);
+                    playerHammerBody.GetComponent<Animator>().enabled = false;
+                    playerHammerBody.GetComponent<Animator>().Rebind();
+                    playerHammerBody.GetComponent<Animator>().Update(0f);
+                    playerHammerWeapon.GetComponent<Animator>().enabled = false;
+                    playerHammerWeapon.GetComponent<Animator>().Rebind();
+                    playerHammerWeapon.GetComponent<Animator>().Update(0f);
+
+                    break;
+                
+                case "sword":
+
+                    playerSwordArm.GetComponent<Animator>().enabled = false;
+                    playerSwordArm.GetComponent<Animator>().Rebind();
+                    playerSwordArm.GetComponent<Animator>().Update(0f);
+                    playerSwordBody.GetComponent<Animator>().enabled = false;
+                    playerSwordBody.GetComponent<Animator>().Rebind();
+                    playerSwordBody.GetComponent<Animator>().Update(0f);                    
+                    playerSwordWeapon.GetComponent<Animator>().enabled = false; 
+                    playerSwordWeapon.GetComponent<Animator>().Rebind();
+                    playerSwordWeapon.GetComponent<Animator>().Update(0f);                       
+
+                    break;
+
+                case "gun":
+
+                    playerGunBullet.SetActive(false);
+                    playerGunBullet.GetComponent<Animator>().Rebind();
+                    playerGunBullet.GetComponent<Animator>().Update(0f);    
+
+                    break;
+
+            }
+
+            float number = Random.value; 
+
+            if(number > enemy.failProb/100){
+
+                number = Random.value;
+
+                int finalAttack = enemy.critProb > number ? enemy.attack * 2 : enemy.attack;
+
+                int finalDefense = isDefending ? game.defense * 2 : game.defense;
+
+                int finalDamage = finalAttack - finalDefense;
+
+                if(finalDamage > 0){
+
+                    game.actualLife -= finalDamage;
+
+                }
+
+
+
+                isDefending = false;
+
+                BattleText.text = "the enemy attacks you mercilessly";
+
+                switch(enemy.name){
+
+                    case "Herbaceum":
+
+                        enemy1.GetComponent<Animator>().SetBool("attack",true);
+
+                        break;
+
+                    case "Poisonus":
+
+                        enemy2.GetComponent<Animator>().SetBool("attack",true);
+
+                        break;
+
+                    case "Fangus":
+
+                        enemy3.GetComponent<Animator>().SetBool("attack",true);
+
+                        break;
+
+                    case "Final Boss":
+
+                        boss.GetComponent<Animator>().SetBool("attack",true);
+
+                        break;
+
+                }   
+
+            }else{
+
+                BattleText.text = "the enemy missed the attack";
+
+            }        
 
             elapsedTime = elapsedTime % 1f;
-
-            game.actualLife -= 5;
 
             battleState = showText; 
 
@@ -1185,16 +2310,41 @@ public class GameController : MonoBehaviour{
 
     private void ShowCredits(){
 
-        SceneManager.LoadScene("Credits");
+        if(!showingCredits){
+
+            BecomeTransition();
+
+            showingCredits = true;
+
+        }else{
+
+            showingCredits = false;
+
+            game = new Base.PlayerInfo();
+
+            SceneManager.LoadScene("Credits");
+
+        }
 
     }
 
     private void ShowGameOver(){
 
-        state = normalState;
-        battleState = startBattle;
+        if(!showingGameOver){
 
-        SceneManager.LoadScene("GameOver");
+            BecomeTransition();
+
+            showingGameOver = true;
+
+        }else{
+
+            showingCredits = false;
+
+            game = new Base.PlayerInfo();
+ 
+            SceneManager.LoadScene("GameOver");
+
+        }
 
     }
 

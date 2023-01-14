@@ -33,6 +33,9 @@ public class MainMenu : MonoBehaviour{
     [SerializeField] private GameObject MainMenuPanel;
     [SerializeField] private GameObject OptionsMenu;
     [SerializeField] private GameObject SelectionMenu;
+    [SerializeField] private GameObject TransitionPanel;
+    [SerializeField] private GameObject SavedPanel;
+
 
     [SerializeField] private Base.PlayerInfo game1;
     [SerializeField] private Base.PlayerInfo game2;
@@ -58,15 +61,19 @@ public class MainMenu : MonoBehaviour{
     private bool Selection1Active = false;
     private bool Selection2Active = false;
     private bool Selection3Active = false;
+    private bool isSaving = false;
+
 
     private string lastObject; 
 
     public static int state = 0;
 
-    private const int introState = 0;
-    private const int menuState = 1;
-    private const int selectionState = 2;
-    private const int optionsState = 3;
+    private const int transitionState = 0;
+    private const int introState = 1;
+    private const int menuState = 2;
+    private const int selectionState = 3;
+    private const int optionsState = 4;
+    private const int gameState = 5;
 
     private const string PlayText = "Play";
     private const string OptionsText = "Options";
@@ -101,24 +108,64 @@ public class MainMenu : MonoBehaviour{
 
         switch(state){
 
+            case transitionState:
+
+                Transition();
+
+                break;
+
             case introState:
 
                 Intro();
+
                 break;
 
             case menuState:
 
                 Menu();
+
                 break;
 
             case optionsState:
+
                 OptionsFunction();
+
                 break;
 
             case selectionState:
+
                 Selection();
+
+                break;
+
+            case gameState:
+
+                Game();
+
                 break;
         }
+
+    }
+
+    private void Transition(){
+
+        elapsedTime += Time.deltaTime;
+
+        TransitionPanel.GetComponent<CanvasGroup>().alpha = 1-elapsedTime;
+
+        print(elapsedTime);
+
+        if (elapsedTime >= 1f) {
+
+            elapsedTime = elapsedTime % 1f;
+
+            TransitionPanel.GetComponent<CanvasGroup>().interactable = true;
+
+            TransitionPanel.SetActive(false);
+
+            state = introState;
+
+        } 
 
     }
 
@@ -150,6 +197,24 @@ public class MainMenu : MonoBehaviour{
 
         ChangeGlowByTime();
         MarkText();
+
+        if(isSaving){
+
+            elapsedTime += 0.005f;
+
+            SavedPanel.SetActive(true);
+
+            if (elapsedTime >= 1f) {
+
+                elapsedTime = elapsedTime % 1f;
+
+                SavedPanel.SetActive(false);
+
+                isSaving = false;
+
+            } 
+
+        }
 
     }
 
@@ -365,11 +430,6 @@ public class MainMenu : MonoBehaviour{
 
             if(Selection1Active || Selection2Active || Selection3Active){
 
-                state = introState;
-
-                MainMenuPanel.SetActive(true);
-                SelectionMenu.SetActive(false);
-
                 if(Selection1Active){
 
                     GameController.gameName = "game1";
@@ -390,9 +450,39 @@ public class MainMenu : MonoBehaviour{
 
                 }
 
-                SceneManager.LoadScene("Game");
+                GameController.state = 0;
+                GameController.battleState = 0;
+
+                Time.timeScale = 1f;
+
+                TransitionPanel.SetActive(true);
+
+                state = gameState;
 
             }
+
+        } 
+
+    }
+
+    private void Game(){
+
+        elapsedTime += Time.deltaTime;
+
+        TransitionPanel.GetComponent<CanvasGroup>().alpha = elapsedTime;
+
+        if (elapsedTime >= 1f) {
+
+            elapsedTime = elapsedTime % 1f;
+
+            SceneManager.LoadScene("Game");
+
+            TransitionPanel.GetComponent<CanvasGroup>().interactable = false;
+
+            state = introState;
+
+            MainMenuPanel.SetActive(true);
+            SelectionMenu.SetActive(false);
 
         } 
 
@@ -474,30 +564,27 @@ public class MainMenu : MonoBehaviour{
 
     public void FullScreen(bool fullScreen){
 
-        Screen.fullScreen = fullScreen;
+        Base.FullScreen(fullScreen);
 
     }
 
     public void ChangeVolume(float volume){
 
-        audioMixer.SetFloat("Volume",volume);
+        Base.ChangeVolume(volume, audioMixer);
 
     }
 
     public void ChangeQuality(int index){
 
-        QualitySettings.SetQualityLevel(index);
+        Base.ChangeQuality(index);
 
     }
 
     public void SaveOptions(){
 
-        Base.OptionsInfo optionsData = new Base.OptionsInfo();
-        optionsData.fullScreen = fullScreenToggle.isOn;
-        optionsData.audioVolume = audioVolumeSlider.value;
-        optionsData.indexQuality = qualityDropdown.value;
+        Base.SaveOptions(fullScreenToggle.isOn, audioVolumeSlider.value, qualityDropdown.value);
 
-        Base.DataSaver.saveData(optionsData, "options");
+        isSaving = true; 
 
     }
 

@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Audio;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -112,8 +113,16 @@ public class Base : MonoBehaviour{
     public class PlayerInfo{
 
         public int level = 1;
-        public int life = 100;
-        public int actualLife = 100;
+        public int exp = 0;
+        public int upgrades = 0;
+        public int attack = 1;
+        public int defense = 1;
+        public int speed = 1;
+        public int critProb = 1;
+        public int failProb = 1;
+        public int life = 1;
+        public int actualLife = 1;
+        public int tip = 0;
 
         public float posX = -7.212492f;
         public float posY = 5.554957f;
@@ -140,7 +149,97 @@ public class Base : MonoBehaviour{
         public bool combatActive = false;
 
         public string selectedWeapon;
-    
+
+    }
+
+    [Serializable]
+    public class EnemyInfo{
+
+        public string name = "";
+
+        public int attack = 1;
+        public int defense = 1;
+        public int speed = 1;
+        public int critProb = 1;
+        public int failProb = 1;
+        public int life = 1;
+        public int actualLife = 1;
+        public int exp = 0;
+        
+    }
+
+    public static EnemyInfo ObjectEnemy1(){
+
+        EnemyInfo enemy1 = new EnemyInfo();
+
+        enemy1.name = "Herbaceum";
+
+        enemy1.attack = 2;
+        enemy1.defense = 5;
+        enemy1.speed = 5;
+        enemy1.critProb = 50;
+        enemy1.failProb = 20;
+        enemy1.life = 10;
+        enemy1.actualLife = 10;
+        enemy1.exp = 100;
+
+        return enemy1;
+
+    }
+
+    public static EnemyInfo ObjectEnemy2(){
+
+        EnemyInfo enemy2 = new EnemyInfo();
+
+        enemy2.name = "Poisonus";
+
+        enemy2.attack = 3;
+        enemy2.defense = 10;
+        enemy2.speed = 10;
+        enemy2.critProb = 60;
+        enemy2.failProb = 15;
+        enemy2.life = 20;
+        enemy2.actualLife = 20;
+        enemy2.exp = 200;
+
+        return enemy2;
+
+    }
+
+    public static EnemyInfo ObjectEnemy3(){
+
+        EnemyInfo enemy3 = new EnemyInfo();
+
+        enemy3.name = "Fangus";
+
+        enemy3.attack = 5;
+        enemy3.defense = 5;
+        enemy3.speed = 5;
+        enemy3.critProb = 75;
+        enemy3.failProb = 30;
+        enemy3.life = 40;
+        enemy3.actualLife = 40;
+        enemy3.exp = 500;
+
+        return enemy3;
+
+    }
+
+    public static EnemyInfo ObjectBoss(){
+
+        EnemyInfo boss = new EnemyInfo();
+
+        boss.name = "Final Boss";
+
+        boss.attack = 50;
+        boss.defense = 30;
+        boss.speed = 30;
+        boss.critProb = 80;
+        boss.failProb = 10;
+        boss.life = 100;
+        boss.actualLife = 100;
+
+        return boss;
 
     }
 
@@ -155,11 +254,58 @@ public class Base : MonoBehaviour{
 
     }
 
+    public static void FullScreen(bool fullScreen){
+
+        //Screen.fullScreen = fullScreen;
+
+        if( fullScreen ){
+
+            Screen.fullScreenMode = FullScreenMode.ExclusiveFullScreen;
+
+        }else{
+
+            Screen.fullScreenMode = FullScreenMode.Windowed;
+
+        } 
+
+    }
+
+    public static void ChangeVolume(float volume, AudioMixer audioMixer){
+
+        audioMixer.SetFloat("Volume",volume);
+
+    }
+
+    public static void ChangeQuality(int index){
+
+        QualitySettings.SetQualityLevel(index);
+
+    }
+
+    public static void SaveOptions(bool fullScreen, float volume, int index){
+
+        OptionsInfo optionsData = new OptionsInfo();
+        optionsData.fullScreen = fullScreen;
+        optionsData.audioVolume = volume;
+        optionsData.indexQuality = index;
+
+        DataSaver.saveData(optionsData, "options");
+
+    }
+
+    public static string[] TipText(){
+
+        return new string[] {"Tip: You should ask your mother for money","Tip: You already have the money, go and buy the game","Tip: The strange man behind the store seems to have something to say, you should check","Tip: You already have the game, go and try it",
+        "Tip: You should find a way to get out of this place", "Tip: There must be some mechanism that opens the door. Check the pipe that goes to the adjoining rooms", "Tip: Go through the door and try to exit the game"};
+
+    }
+
+
     public static string[,] initialText(){
 
-        return  new string[,] { {"¡This is PixelOut!","¡The new vide ogame of the moment!","The most intrepid and futuristic video game","That has ever existed",
-        "Can you resist playing it?", "Should I buy this vide ogame"}, 
-        {"unknown","unknown","unknown","unknown","unknown","me"} };
+        return  new string[,] { {"¡This is PixelOut!","¡The new video game of the moment!","The most intrepid and futuristic video game","That has ever existed",
+        "Can you resist playing it?", "Should I buy this video game"}, 
+        {"unknown2","unknown2","unknown2","unknown2","unknown2","me"} };
 
     }
 
@@ -189,7 +335,7 @@ public class Base : MonoBehaviour{
 
         return  new string[,] { {"Only games left for the next 3 customers","The rest will have to wait",
         "Until back in stock","It can't be real, I'm late","I won't be able to play the game"}, 
-        {"unknown","unknown","unknown","me","me"} };
+        {"unknown3","unknown3","unknown3","me","me"} };
 
     }
 
